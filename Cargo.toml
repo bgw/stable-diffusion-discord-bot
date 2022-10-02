@@ -1,0 +1,28 @@
+[package]
+name = "stable-diffusion-bot"
+version = "0.0.1"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+async-trait = "0.1"
+reqwest = { version = "0.11", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.0", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+[dependencies.serenity]
+version = "0.11"
+default-features = false
+features = [
+    "builder",
+    "cache",
+    "chrono",
+    "client",
+    "gateway",
+    "http",
+    "model",
+    "rustls_backend",
+    "utils",
+]
