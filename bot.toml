@@ -1,0 +1,5 @@
+allowed_channels = [
+    1025975487954169937,  # test server
+    1026004501724934184,  # cafe chan
+    1026247911157272596,  # patrick
+]

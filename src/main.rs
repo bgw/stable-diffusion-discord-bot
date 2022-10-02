@@ -12,6 +12,7 @@ use serenity::model::channel::Message;
 use serenity::model::gateway::{GatewayIntents, Ready};
 use serenity::model::id::ChannelId;
 use tokio::time::sleep;
+use tokio::fs;
 use tracing::{debug, error, info, instrument};
 
 const STABLE_DIFFUSION_VERSION: &str =
@@ -159,18 +160,22 @@ impl EventHandler for Handler {
         info!("{} is connected", ready.user.name);
     }
 }
+
+#[derive(Deserialize)]
+struct BotConfig {
+    allowed_channels: Vec<ChannelId>,
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt().init();
+
+    let config: BotConfig = toml::from_slice(fs::read("bot.toml").await.expect("failed to read bot.toml").as_slice()).expect("failed to parse bot.toml");
 
     let replicate_token =
         env::var("REPLICATE_TOKEN").expect("REPLICATE_TOKEN environment variable must be set");
     let discord_token =
         env::var("DISCORD_TOKEN").expect("DISCORD_TOKEN environment variable must be set");
-    let channel_id: u64 = env::var("CHANNEL_ID")
-        .expect("CHANNEL_ID environment variable must be set")
-        .parse()
-        .expect("CHANNEL_ID must be a valid u64");
 
     let mut replicate_headers = HeaderMap::new();
     replicate_headers.append(
@@ -183,8 +188,7 @@ async fn main() {
         HeaderValue::from_static("application/json"),
     );
 
-    let mut allowed_channel_ids = HashSet::new();
-    allowed_channel_ids.insert(channel_id.into());
+    let allowed_channel_ids = HashSet::from_iter(config.allowed_channels.iter().copied());
     let handler = Handler {
         allowed_channel_ids,
         sd_api: StableDiffusionApi {

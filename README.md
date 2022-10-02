@@ -12,8 +12,10 @@ Similar to [this Python bot][python bot], but in Rust with [Serenity][].
 
 ## Usage
 
+Modify `bot.toml` and add allowed channel ids.
+
 ```
-REPLICATE_TOKEN=... DISCORD_TOKEN=... CHANNEL_ID=... cargo run
+REPLICATE_TOKEN=... DISCORD_TOKEN=... cargo run
 ```
 
 ## Notes
