@@ -1,5 +1,5 @@
 mod prompt_parse;
-mod sd_api;
+mod replicate_api;
 
 use std::collections::HashSet;
 use std::env;
@@ -15,11 +15,11 @@ use serenity::model::id::ChannelId;
 use tokio::fs;
 use tracing::{debug, error, info, instrument};
 
-use crate::sd_api::{StableDiffusionApi, STABLE_DIFFUSION_VERSION};
+use crate::replicate_api::{StableDiffusionApi, STABLE_DIFFUSION_VERSION};
 
 struct Handler {
     allowed_channel_ids: HashSet<ChannelId>,
-    sd_api: StableDiffusionApi,
+    replicate_api: StableDiffusionApi,
 }
 
 impl Handler {
@@ -36,7 +36,7 @@ impl Handler {
 
         let (reply_msg, img_uri_result) = tokio::join!(msg.reply(&ctx, "*Processing...*"), async {
             let mut uri_vec: Vec<String> = self
-                .sd_api
+                .replicate_api
                 .predict(STABLE_DIFFUSION_VERSION, &sd_request)
                 .await?;
             uri_vec
@@ -118,7 +118,7 @@ async fn main() {
     let allowed_channel_ids = HashSet::from_iter(config.allowed_channels.iter().copied());
     let handler = Handler {
         allowed_channel_ids,
-        sd_api: StableDiffusionApi::new(&replicate_token),
+        replicate_api: StableDiffusionApi::new(&replicate_token),
     };
 
     let mut client = Client::builder(

@@ -1,7 +1,7 @@
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-use crate::sd_api::StableDiffusionRequest;
+use crate::replicate_api::StableDiffusionRequest;
 
 static MODIFIER_RE: Lazy<Regex> =
     Lazy::new(|| Regex::new("![a-zA-Z_]+\\b").expect("regex compilation"));
