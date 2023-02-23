@@ -25,7 +25,7 @@ pub fn prompt_parse(msg: &str) -> anyhow::Result<StableDiffusionRequest<'_>> {
                 request.guidance_scale = Some(15.0);
             }
             "!large" => {
-                request.width = Some(1024);
+                request.width = Some(768);
                 request.height = Some(768);
             }
             mod_str => {
