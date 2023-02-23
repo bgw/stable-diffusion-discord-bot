@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use tokio::time::sleep;
 
 pub const STABLE_DIFFUSION_VERSION: &str =
-    "f178fa7a1ae43a9a9af01b833b9d2ecf97b1bcb0acfd2dc5dd04895e042863f1";
+    "db21e45d3f7023abc2a46ee38a23973f6dce16bb082a930b0c49861f96d1e5bf";
 const REPLICATE_API_URI: &str = "https://api.replicate.com/v1";
 
 pub struct StableDiffusionApi {
