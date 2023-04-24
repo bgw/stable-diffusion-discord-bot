@@ -1,6 +1,3 @@
-mod prompt_parse;
-mod replicate_api;
-
 use std::collections::HashSet;
 use std::env;
 
@@ -15,18 +12,21 @@ use serenity::model::id::ChannelId;
 use tokio::fs;
 use tracing::{debug, error, info, instrument};
 
-use crate::replicate_api::{StableDiffusionApi, STABLE_DIFFUSION_VERSION};
+use crate::stability_api::StabilityApi;
+
+mod prompt_parse;
+mod stability_api;
 
 struct Handler {
     allowed_channel_ids: HashSet<ChannelId>,
-    replicate_api: StableDiffusionApi,
+    stability_api: StabilityApi,
 }
 
 impl Handler {
     async fn predict_message_impl(&self, ctx: Context, msg: Message) -> anyhow::Result<()> {
         debug!(%msg.author, %msg.content, "received message");
 
-        let sd_request = match prompt_parse(&msg.content) {
+        let request = match prompt_parse(&msg.content) {
             Ok(req) => req,
             Err(err) => {
                 msg.reply(&ctx, &err).await?;
@@ -34,19 +34,17 @@ impl Handler {
             }
         };
 
-        let (reply_msg, img_uri_result) = tokio::join!(msg.reply(&ctx, "*Processing...*"), async {
-            let mut uri_vec: Vec<String> = self
-                .replicate_api
-                .predict(STABLE_DIFFUSION_VERSION, &sd_request)
-                .await?;
-            uri_vec
+        let (reply_msg, image_result) = tokio::join!(msg.reply(&ctx, "*Processing...*"), async {
+            let mut responses = self.stability_api.text_to_image(&request).await?;
+            Ok(responses
                 .pop()
-                .context("expected at least one result from replicate")
+                .context("expected at least one result from backend")?
+                .image)
         });
 
         let mut reply_msg = reply_msg?;
 
-        let img_uri = match img_uri_result {
+        let image = match image_result {
             Ok(uri) => uri,
             Err(err) => {
                 reply_msg
@@ -64,7 +62,9 @@ impl Handler {
 
         reply_msg
             .edit(ctx, |edit_msg| {
-                edit_msg.content("").attachment(img_uri.as_str())
+                edit_msg
+                    .content("")
+                    .attachment((&image[..], "stablediffusionbot.png"))
             })
             .await?;
         Ok(())
@@ -110,15 +110,15 @@ async fn main() {
     )
     .expect("failed to parse bot.toml");
 
-    let replicate_token =
-        env::var("REPLICATE_TOKEN").expect("REPLICATE_TOKEN environment variable must be set");
+    let stability_api_key =
+        env::var("STABILITY_API_KEY").expect("STABILITY_API_KEY environment variable must be set");
     let discord_token =
         env::var("DISCORD_TOKEN").expect("DISCORD_TOKEN environment variable must be set");
 
     let allowed_channel_ids = HashSet::from_iter(config.allowed_channels.iter().copied());
     let handler = Handler {
         allowed_channel_ids,
-        replicate_api: StableDiffusionApi::new(&replicate_token),
+        stability_api: StabilityApi::new(&stability_api_key),
     };
 
     let mut client = Client::builder(
