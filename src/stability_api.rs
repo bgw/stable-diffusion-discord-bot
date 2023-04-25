@@ -68,13 +68,13 @@ impl StabilityApi {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct TextPrompt<'a> {
     pub text: Cow<'a, str>,
     pub weight: Option<f64>,
 }
 
-#[derive(Default, Serialize)]
+#[derive(Default, Debug, Serialize)]
 pub struct TextToImageRequest<'a> {
     /// default 512, multiple of 64
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -1,12 +1,11 @@
 use std::collections::HashSet;
 use std::env;
 
-use anyhow::Context as AnyhowContext;
 use prompt_parse::prompt_parse;
 use serde::Deserialize;
 use serenity::async_trait;
 use serenity::client::{Client, Context, EventHandler};
-use serenity::model::channel::Message;
+use serenity::model::channel::{AttachmentType, Message};
 use serenity::model::gateway::{GatewayIntents, Ready};
 use serenity::model::id::ChannelId;
 use tokio::fs;
@@ -34,17 +33,14 @@ impl Handler {
             }
         };
 
-        let (reply_msg, image_result) = tokio::join!(msg.reply(&ctx, "*Processing...*"), async {
-            let mut responses = self.stability_api.text_to_image(&request).await?;
-            Ok(responses
-                .pop()
-                .context("expected at least one result from backend")?
-                .image)
-        });
+        let (reply_msg, responses_result) =
+            tokio::join!(msg.reply(&ctx, "*Processing...*"), async {
+                self.stability_api.text_to_image(&request).await
+            });
 
         let mut reply_msg = reply_msg?;
 
-        let image = match image_result {
+        let responses = match responses_result {
             Ok(uri) => uri,
             Err(err) => {
                 reply_msg
@@ -61,10 +57,15 @@ impl Handler {
         };
 
         reply_msg
-            .edit(ctx, |edit_msg| {
+            .edit(ctx, move |edit_msg| {
+                edit_msg.content("");
+                for resp in responses {
+                    edit_msg.attachment(AttachmentType::Bytes {
+                        data: resp.image.into(),
+                        filename: format!("stablediffusionbot.png"),
+                    });
+                }
                 edit_msg
-                    .content("")
-                    .attachment((&image[..], "stablediffusionbot.png"))
             })
             .await?;
         Ok(())

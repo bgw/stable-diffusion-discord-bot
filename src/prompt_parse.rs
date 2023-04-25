@@ -14,23 +14,21 @@ pub fn prompt_parse(msg: &str) -> anyhow::Result<TextToImageRequest<'_>> {
             text: MODIFIER_RE.replace_all(msg, ""),
             weight: None,
         }],
+        samples: Some(3),
         ..Default::default()
     };
 
     for modifier in MODIFIER_RE.find_iter(msg) {
         match modifier.as_str() {
             "!quality" => {
+                request.samples = Some(1);
                 request.steps = Some(100);
             }
             "!strict" => {
                 request.cfg_scale = Some(15.0);
             }
-            "!large" => {
-                request.width = Some(768);
-                request.height = Some(768);
-            }
             mod_str => {
-                anyhow::bail!("{mod_str} is not a supported modifier (!quality, !strict, !large)");
+                anyhow::bail!("{mod_str} is not a supported modifier (!quality, !strict)");
             }
         }
     }
