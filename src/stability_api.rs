@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use reqwest::header::{self, HeaderMap, HeaderValue};
 use serde::{Deserialize, Deserializer, Serialize};
 
-const ENGINE_ID: &str = "stable-diffusion-xl-beta-v2-2-2";
+const ENGINE_ID: &str = "stable-diffusion-xl-1024-v1-0";
 const STABILITY_API_URI: &str = "https://api.stability.ai/v1";
 
 pub struct StabilityApi {

@@ -43,12 +43,13 @@ static STYLE_PRESETS_STRING: Lazy<String> = Lazy::new(|| {
 
 pub fn prompt_parse(msg: &str) -> anyhow::Result<TextToImageRequest<'_>> {
     let mut request = TextToImageRequest {
-        height: Some(512),
-        width: Some(512),
+        width: Some(1024),
+        height: Some(1024),
         text_prompts: vec![TextPrompt {
             text: MODIFIER_RE.replace_all(msg, ""),
             weight: None,
         }],
+        steps: Some(40),
         samples: Some(3),
         ..Default::default()
     };
@@ -66,7 +67,7 @@ pub fn prompt_parse(msg: &str) -> anyhow::Result<TextToImageRequest<'_>> {
         } else {
             match modifier {
                 "quality" => {
-                    request.samples = Some(1);
+                    request.samples = Some(2);
                     request.steps = Some(100);
                 }
                 "strict" => {
